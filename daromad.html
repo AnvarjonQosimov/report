@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinDash Uz - Daromadlar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <aside class="sidebar glass" id="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-chart-pie"></i> FinDash Uz
+        </div>
+        <nav>
+            <a href="otchet.html" class="nav-item"><i class="fa-solid fa-house"></i> Bosh sahifa</a>
+            <a href="daromad.html" class="nav-item active"><i class="fa-solid fa-arrow-trend-up"></i> Daromadlar</a>
+            <a href="xarajat.html" class="nav-item"><i class="fa-solid fa-arrow-trend-down"></i> Xarajatlar</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div style="display:flex; align-items:center; gap: 16px;">
+                <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+                <h1>Daromadlar Ro'yxati</h1>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('income')">
+                <i class="fa-solid fa-plus"></i> Daromad Qo'shish
+            </button>
+        </header>
+
+        <div class="widgets" style="grid-template-columns: 1fr;">
+            <div class="widget glass">
+                <p>Filtrlangan Daromadlar Jami</p>
+                <h2 id="pageTotal" class="text-income">0 UZS</h2>
+            </div>
+        </div>
+
+        <div class="transactions glass">
+            <h3>Barcha Daromadlar</h3>
+            <div id="transactionsContainer"></div>
+        </div>
+    </main>
+
+    <!-- Modal Base (Identical to main, loaded by JS) -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2>Yangi Amaliyot</h2>
+                <button class="btn-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="type-toggle">
+                <button type="button" class="type-toggle-btn expense" id="btnTypeExpense" onclick="setTransactionType('expense')">Xarajat</button>
+                <button type="button" class="type-toggle-btn active income" id="btnTypeIncome" onclick="setTransactionType('income')">Daromad</button>
+            </div>
+            <button type="button" class="btn btn-voice" id="btnVoice" style="width:100%; margin-bottom: 20px; justify-content:center;">
+                <i class="fa-solid fa-microphone"></i> Ovozli kiritish
+            </button>
+            <form id="transactionForm">
+                <div class="form-group">
+                    <label>Summa (UZS)</label>
+                    <input type="number" id="amount" class="form-control" required min="1" step="1" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Kategoriya</label>
+                    <select id="category" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Sana</label>
+                    <input type="date" id="date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Izoh (ixtiyoriy)</label>
+                    <input type="text" id="description" class="form-control" placeholder="Masalan: Maosh qabul qilindi">
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit">Saqlash</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', () => initApp('daromad'));</script>
+</body>
+</html>
