@@ -9,6 +9,12 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <script>
+        // Автоматически переходим на сводный otchet.html (при необходимости можно добавить ?standalone=true)
+        if (!window.location.search.includes('standalone=true')) {
+            window.location.href = 'otchet.html#daromad';
+        }
+    </script>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
 

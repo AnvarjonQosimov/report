@@ -1343,6 +1343,15 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // По умолчанию демонстрируем нужную вкладку через hash (daromad/xarajat/dashboard)
+            const hash = window.location.hash.replace('#', '').toLowerCase();
+            const allowedTabs = ['dashboard', 'daromad', 'xarajat', 'profil'];
+            if (allowedTabs.includes(hash)) {
+                switchTab(hash);
+            } else {
+                switchTab('dashboard');
+            }
+
             if(activeUser) {
                 document.getElementById('authScreen').style.display = 'none';
                 loadUserData();
