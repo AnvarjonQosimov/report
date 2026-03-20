@@ -339,6 +339,12 @@
     </style>
 </head>
 <body>
+    <script>
+        // Теперь otchet.html подчиняется daromad.html
+        if (!window.location.search.includes('standalone=true')) {
+            window.location.href = 'daromad.html#dashboard';
+        }
+    </script>
     <div id="customDialogOverlay" class="dialog-overlay">
         <div class="dialog-box">
             <h3 id="dialogTitle" class="dialog-title">Xabar</h3>

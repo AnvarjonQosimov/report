@@ -3,93 +3,1539 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hisobot Uz - Daromadlar</title>
+    <title>Hisobot Uz - Intellektual Boshqaruv</title>
+    <!-- Google Fonts & Font Awesome -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --income: #10b981;
+            --expense: #ef4444;
+            --font-family: 'Inter', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: 0;
+            opacity: 0.5;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .orb-1 { width: 400px; height: 400px; background: rgba(59, 130, 246, 0.4); top: -100px; left: -100px; }
+        .orb-2 { width: 500px; height: 500px; background: rgba(16, 185, 129, 0.3); bottom: -200px; right: -100px; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(50px) scale(1.1); }
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 15; backdrop-filter: blur(4px);
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .sidebar {
+            width: 250px;
+            height: calc(100vh - 40px);
+            margin: 20px;
+            padding: 24px;
+            position: fixed;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .logo i { color: var(--accent); }
+
+        .sidebar-title {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-family: var(--font-family);
+            font-size: 15px;
+            justify-content: space-between;
+        }
+        
+        .nav-item-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-main); }
+        .nav-item.active { background: rgba(59, 130, 246, 0.2); color: var(--accent); border-left: 3px solid var(--accent); }
+
+        .btn-add-file {
+            background: transparent; border: 1px dashed var(--glass-border); justify-content: center; margin-top: 10px; color: var(--text-main); padding: 12px; border-radius: 12px; cursor: pointer; transition: 0.2s; width: 100%; font-family: var(--font-family); display:flex; gap:8px; align-items:center;
+        }
+        .btn-add-file:hover { background: rgba(255,255,255,0.1); }
+
+        .main-content {
+            flex: 1;
+            margin-left: 290px;
+            padding: 20px 40px 40px 20px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .header {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 20px;
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .header h1 { font-size: 28px; font-weight: 600; color: var(--text-main); }
+
+        .top-tabs {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 5px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .top-tabs::-webkit-scrollbar { height: 4px; }
+        .top-tabs::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .tab-btn {
+            background: transparent; border: none; color: var(--text-muted); font-size: 15px; font-weight: 500; cursor: pointer; padding: 10px 20px; border-radius: 12px; transition: all 0.2s; white-space: nowrap; font-family: var(--font-family);
+        }
+        .tab-btn:hover { background: rgba(255, 255, 255, 0.05); color: var(--text-main); }
+        .tab-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3); }
+
+        .btn {
+            padding: 12px 24px; border-radius: 12px; border: none; font-family: var(--font-family); font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4); }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        .btn-voice { background: rgba(16, 185, 129, 0.2); color: var(--income); border: 1px solid var(--income); width: 100%; justify-content: center; margin-bottom: 20px; }
+        .btn-voice:hover { background: rgba(16, 185, 129, 0.4); transform: translateY(-2px); }
+
+        .widgets { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; }
+        .widget { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+        .widget p { color: var(--text-muted); font-size: 14px; font-weight: 500; text-transform: uppercase; }
+        
+        .currency-block { display:flex; flex-direction:column; gap:4px; }
+        .currency-line { font-size: 26px; font-weight: 700; overflow-wrap: break-word; }
+        .text-income .currency-line { color: var(--income); }
+        .text-expense .currency-line { color: var(--expense); }
+
+        .charts { display: flex; flex-direction: column; gap: 24px; }
+        .chart-container { padding: 24px; min-height: 300px; display: flex; flex-direction: column; gap: 16px; }
+        .chart-wrapper { position: relative; flex-grow: 1; width: 100%; }
+
+        .transactions { padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; padding: 12px 16px; color: var(--text-muted); font-weight: 500; font-size: 14px; border-bottom: 1px solid var(--glass-border); }
+        td { padding: 16px; font-size: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); vertical-align: middle; }
+        .cat-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; background: rgba(255, 255, 255, 0.1); }
+        .amount.income { color: var(--income); font-weight: 600; }
+        .amount.expense { color: var(--expense); font-weight: 600; }
+        
+        .btn-action { background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-size: 16px; transition: color 0.2s; padding: 5px; }
+        .btn-action:hover { color: var(--text-main); }
+        .btn-action.edit:hover { color: var(--accent); }
+        .btn-action.delete:hover { color: var(--expense); }
+
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
+            z-index: 100; display: flex; justify-content: center; align-items: flex-start;
+            padding-top: 50px;
+            opacity: 0; pointer-events: none; transition: all 0.3s ease;
+            overflow-y: auto;
+        }
+        .modal.active { opacity: 1; pointer-events: auto; }
+        .modal-content { width: 100%; max-width: 450px; padding: 32px; transform: translateY(20px); transition: all 0.3s ease; margin: 20px; margin-bottom: 50px;}
+        .modal.active .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .btn-close { background: transparent; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+        
+        .form-row { display: flex; gap: 16px; width: 100%; }
+        .form-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        
+        .form-control { width: 100%; padding: 12px 16px; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-main); font-family: var(--font-family); font-size: 15px; }
+        .form-control option { background:#1e293b; color:#fff; }
+        
+        .type-toggle { display: flex; background: rgba(0, 0, 0, 0.2); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
+        .type-toggle-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.3s }
+        .type-toggle-btn.active.income { background: rgba(16, 185, 129, 0.2); color: var(--income); }
+        .type-toggle-btn.active.expense { background: rgba(239, 68, 68, 0.2); color: var(--expense); }
+
+        .menu-toggle { display: none; background: transparent; border: none; color: var(--text-main); font-size: 24px; cursor: pointer; }
+
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-150%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 24px; }
+            .menu-toggle { display: block; }
+            .widgets { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+            .header h1 { font-size: 24px; }
+        }
+
+        @media (max-width: 768px) {
+            .main-content { padding: 16px; }
+            .widgets { grid-template-columns: 1fr; gap: 16px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .charts > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+        }
+
+        @media (max-width: 600px) {
+            .modal-content { padding: 24px; margin: 16px; width: auto; }
+            .main-content { padding: 16px 12px; }
+            .transactions { padding: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .chart-container { padding: 16px; }
+            .widgets { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+            .btn-primary { width: 100%; justify-content: center; }
+            
+            .header-top { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .header-top > div { width: 100%; }
+
+            /* Keep table like laptop but make it scrollable */
+            table { min-width: 450px; border-collapse: collapse;}
+            th, td { display: table-cell; padding: 12px 8px; font-size: 13px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
+            th { border-bottom: 1px solid var(--glass-border); }
+            tr { border: none; margin: 0; padding: 0; background: transparent; display: table-row;}
+            
+            .cat-badge { font-size: 11px; padding: 4px 8px; }
+            .btn-action { padding: 6px; margin-left: 4px; background: transparent; font-size: 14px;}
+            .currency-line { font-size: 18px; }
+            .header h1 { font-size: 22px; }
+        }
+
+        @media (max-width: 400px) {
+            .main-content { padding: 8px; }
+            .header h1 { font-size: 20px; }
+            .tab-btn { padding: 8px 12px; font-size: 12px; }
+            .widget { padding: 14px; gap: 6px; }
+            .widgets { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+            .currency-line { font-size: 16px; }
+            .btn-primary { font-size: 14px; padding: 10px 16px;}
+        }
+
+        .auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 1000; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .auth-card {
+            background: var(--glass-bg); padding: 40px; border-radius: 20px;
+            width: 100%; max-width: 400px; text-align: center; margin: 20px;
+            border: 1px solid var(--glass-border);
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .auth-card h2 { margin-bottom: 8px; font-size: 28px; }
+        .auth-toggle { color: var(--accent); cursor: pointer; font-size: 14px; margin-top: 10px; }
+        .auth-toggle:hover { text-decoration: underline; }
+
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Dialog Overlay */
+        .dialog-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px);
+            z-index: 9999; display: none; align-items: center; justify-content: center;
+        }
+        .dialog-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
+        .dialog-box {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 24px; width: 90%; max-width: 400px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .dialog-title { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; }
+        .dialog-message { font-size: 15px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+        .dialog-input {
+            width: 100%; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.2); color: white; font-size: 14px; margin-bottom: 20px; display: none; box-sizing: border-box;
+        }
+        .dialog-input:focus { outline: none; border-color: var(--accent); }
+        .dialog-buttons { display: flex; gap: 12px; justify-content: center; }
+        .dialog-btn {
+            padding: 10px 20px; border-radius: 8px; border: none; font-size: 14px; font-weight: 500; cursor: pointer; flex: 1; transition: 0.2s;
+        }
+        .dialog-btn.cancel { background: rgba(255,255,255,0.1); color: var(--text-main); }
+        .dialog-btn.cancel:hover { background: rgba(255,255,255,0.2); }
+        .dialog-btn.confirm { background: var(--accent); color: white; }
+        .dialog-btn.confirm:hover { background: #2563eb; }
+        .dialog-btn.danger { background: var(--expense); color: white; }
+        .dialog-btn.danger:hover { background: #dc2626; }
+    </style>
 </head>
 <body>
-    <script>
-        // Автоматически переходим на сводный otchet.html (при необходимости можно добавить ?standalone=true)
-        if (!window.location.search.includes('standalone=true')) {
-            window.location.href = 'otchet.html#daromad';
-        }
-    </script>
+    <div id="customDialogOverlay" class="dialog-overlay">
+        <div class="dialog-box">
+            <h3 id="dialogTitle" class="dialog-title">Xabar</h3>
+            <p id="dialogMessage" class="dialog-message">Matn</p>
+            <input type="text" id="dialogInput" class="dialog-input" placeholder="...">
+            <div class="dialog-buttons">
+                <button id="dialogCancelBtn" class="dialog-btn cancel" onclick="closeCustomDialog('cancel')">Bekor qilish</button>
+                <button id="dialogConfirmBtn" class="dialog-btn confirm" onclick="closeCustomDialog('confirm')">Ha</button>
+            </div>
+        </div>
+    </div>
+    <div id="authScreen" class="auth-overlay">
+        <div class="auth-card glass">
+            <div class="logo" style="justify-content: center;">
+                <i class="fa-solid fa-chart-pie"></i> Hisobot Uz
+            </div>
+            <h2 id="authTitle">Tizimga kirish</h2>
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <div class="form-group" style="text-align: left; margin-bottom: 12px;">
+                    <label>Foydalanuvchi nomi</label>
+                    <input type="text" id="authUsername" class="form-control" required placeholder="Masalan: anvarjon">
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label>Parol</label>
+                    <input type="password" id="authPassword" class="form-control" required placeholder="Parolni kiriting">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; justify-content: center;" id="authBtn">Kirish</button>
+            </form>
+            <p class="auth-toggle" id="authToggleText" onclick="toggleAuthMode()">Akkaunt yo'qmi? Ro'yxatdan o'tish</p>
+        </div>
+    </div>
+
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <aside class="sidebar glass" id="sidebar">
         <div class="logo">
             <i class="fa-solid fa-chart-pie"></i> Hisobot Uz
         </div>
-        <nav>
-            <a href="otchet.html" class="nav-item"><i class="fa-solid fa-house"></i> Bosh sahifa</a>
-            <a href="daromad.html" class="nav-item active"><i class="fa-solid fa-arrow-trend-up"></i> Daromadlar</a>
-            <a href="xarajat.html" class="nav-item"><i class="fa-solid fa-arrow-trend-down"></i> Xarajatlar</a>
+        
+        <div class="sidebar-title">Mening Fayllarim</div>
+        
+        <nav id="filesList" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- Rendered via JS -->
         </nav>
+        
+        <button class="btn-add-file" onclick="createNewFile()">
+            <i class="fa-solid fa-folder-plus"></i> Yangi loyiha qo'shish
+        </button>
+        <button class="btn-add-file" style="margin-top:auto; color: var(--expense); border-color: rgba(239, 68, 68, 0.3);" onclick="confirmLogout()">
+            <i class="fa-solid fa-right-from-bracket"></i> Tizimdan chiqish
+        </button>
     </aside>
 
     <main class="main-content">
         <header class="header">
-            <div style="display:flex; align-items:center; gap: 16px;">
-                <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
-                <h1>Daromadlar Ro'yxati</h1>
+            <div class="header-top">
+                <div style="display:flex; align-items:center; gap: 16px;">
+                    <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Joriy loyiha:</span>
+                        <h1 id="currentFileName">Loyiha nomi</h1>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="openModal()">
+                    <i class="fa-solid fa-plus"></i> Yangi yozuv
+                </button>
             </div>
-            <button class="btn btn-primary" onclick="openModal('income')">
-                <i class="fa-solid fa-plus"></i> Daromad Qo'shish
-            </button>
+            
+            <div class="top-tabs">
+                <button class="tab-btn active" id="nav-dashboard" onclick="switchTab('dashboard')"><i class="fa-solid fa-house"></i> Bosh sahifa</button>
+                <button class="tab-btn" id="nav-daromad" onclick="switchTab('daromad')"><i class="fa-solid fa-arrow-trend-up"></i> Daromadlar</button>
+                <button class="tab-btn" id="nav-xarajat" onclick="switchTab('xarajat')"><i class="fa-solid fa-arrow-trend-down"></i> Xarajatlar</button>
+                <button class="tab-btn" id="nav-profil" onclick="switchTab('profil')"><i class="fa-solid fa-user-astronaut"></i> Profil</button>
+            </div>
         </header>
 
-        <div class="widgets" style="grid-template-columns: 1fr;">
-            <div class="widget glass">
-                <p>Filtrlangan Daromadlar Jami</p>
-                <h2 id="pageTotal" class="text-income">0 UZS</h2>
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content active">
+            <div class="widgets">
+                <div class="widget glass">
+                    <p>Umumiy Balans</p>
+                    <div class="currency-block" id="total-balance"></div>
+                </div>
+                <div class="widget glass">
+                    <p>Jami Daromad</p>
+                    <div class="currency-block text-income" id="total-income"></div>
+                </div>
+                <div class="widget glass">
+                    <p>Jami Xarajat</p>
+                    <div class="currency-block text-expense" id="total-expense"></div>
+                </div>
+            </div>
+
+            <!-- CHARTS SECTION -->
+            <div class="charts" style="margin-top: 24px;">
+                <div class="chart-container glass" style="height: 350px;">
+                    <h3>Dinamika (Asosiy valyutada)</h3>
+                    <div class="chart-wrapper"><canvas id="mainChart"></canvas></div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
+                    <div class="chart-container glass">
+                        <h3>Daromadlar Tuzilmasi</h3>
+                        <div class="chart-wrapper"><canvas id="incomeCategoryChart"></canvas></div>
+                    </div>
+                    <div class="chart-container glass">
+                        <h3>Xarajatlar Tuzilmasi</h3>
+                        <div class="chart-wrapper"><canvas id="expenseCategoryChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transactions glass" style="margin-top: 24px;">
+                <h3>So'nggi 10 amaliyot</h3>
+                <div id="transactionsContainerMain"></div>
             </div>
         </div>
 
-        <div class="transactions glass">
-            <h3>Barcha Daromadlar</h3>
-            <div id="transactionsContainer"></div>
+        <!-- DAROMAD TAB -->
+        <div id="tab-daromad" class="tab-content">
+            <div class="widgets" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+                <div class="widget glass">
+                    <p>Barcha Daromadlar Jami</p>
+                    <div class="currency-block text-income" id="pageTotalIncome"></div>
+                </div>
+            </div>
+            <div class="transactions glass">
+                <h3>Daromadlar Ro'yxati</h3>
+                <div id="transactionsContainerIncome"></div>
+            </div>
+        </div>
+
+        <!-- XARAJAT TAB -->
+        <div id="tab-xarajat" class="tab-content">
+            <div class="widgets" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+                <div class="widget glass">
+                    <p>Barcha Xarajatlar Jami</p>
+                    <div class="currency-block text-expense" id="pageTotalExpense"></div>
+                </div>
+            </div>
+            <div class="transactions glass">
+                <h3>Xarajatlar Ro'yxati</h3>
+                <div id="transactionsContainerExpense"></div>
+            </div>
+        </div>
+
+        <!-- PROFIL TAB -->
+        <div id="tab-profil" class="tab-content">
+            <div class="widgets" style="grid-template-columns: 1fr;">
+                <div class="widget glass" style="align-items: center; text-align: center; padding: 40px 20px;">
+                    <div style="width: 100px; height: 100px; border-radius: 50px; background: rgba(59, 130, 246, 0.15); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--accent); margin-bottom: 16px;">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                    </div>
+                    <h2 id="profileUsername" style="font-size: 28px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">Foydalanuvchi</h2>
+                    <div style="background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 24px; border: 1px solid var(--glass-border);">
+                        <span style="color: var(--text-muted); font-size: 14px;">Parol:</span>
+                        <span id="profilePassword" style="color: var(--text-main); font-weight: 600; font-family: monospace; letter-spacing: 2px;">••••••••</span>
+                        <button onclick="toggleProfilePassword()" style="background: transparent; border: none; color: var(--accent); cursor: pointer;"><i id="profilePasswordIcon" class="fa-solid fa-eye"></i></button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; width: 100%;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 16px; flex: 1; min-width: 140px; max-width: 200px; border: 1px solid var(--glass-border);">
+                            <div style="font-size: 28px; font-weight: 700; color: var(--accent);" id="profileFileCount">0</div>
+                            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; font-weight: 500;">Faol Loyihalar</div>
+                        </div>
+                        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 16px; flex: 1; min-width: 140px; max-width: 200px; border: 1px solid var(--glass-border);">
+                            <div style="font-size: 28px; font-weight: 700; color: var(--income);" id="profileTxCount">0</div>
+                            <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; font-weight: 500;">Barcha Amaliyotlar</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 16px; width: 100%; max-width: 416px; border: 1px solid var(--glass-border); text-align: center; margin-top: 16px;">
+                        <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; font-weight: 500;">Barcha Loyihalardagi Sof Foyda</div>
+                        <div id="profileTotalProfit" style="font-size: 24px; font-weight: 700;">0 UZS</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </div>
         </div>
     </main>
 
-    <!-- Modal Base (Identical to main, loaded by JS) -->
+    <!-- AUDIO IMPORT MODAL -->
+    <div id="audioImportModal" class="dialog-overlay" style="z-index: 10001; text-align: left;">
+        <div class="modal-content glass" style="max-width: 500px; width: 90%; margin: 20px auto; padding: 24px; border-radius: 16px; position: relative; border: 1px solid var(--glass-border);">
+            <button class="modal-close" onclick="closeAudioImportModal()" style="position: absolute; right: 20px; top: 20px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px;"><i class="fa-solid fa-xmark"></i></button>
+            <h2 style="margin-bottom: 24px; font-size: 20px;">Diktofon faylini yuklash</h2>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted);">Audio faylni tanlang (MP3, M4A, OGG, WAV)</label>
+                <input type="file" id="audioFile" class="form-control" accept="audio/*, video/mp4" onchange="loadAudioFile(event)" style="padding: 10px;">
+            </div>
+            
+            <div id="audioPlayerContainer" style="display: none; text-align: center; margin-bottom: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 16px; border: 1px solid var(--glass-border);">
+                <audio id="audioPlayer" controls style="width: 100%; height: 40px; margin-bottom: 12px; border-radius: 8px;"></audio>
+                <div style="display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 12px; background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--expense); border-radius: 6px; margin-bottom: 16px;">
+                    <i class="fa-solid fa-circle-info" style="color: var(--expense); margin-top: 2px;"></i>
+                    <p style="font-size: 13px; color: var(--text-main); line-height: 1.4; margin: 0;">Telefoningiz ovozi balandligiga ishonch hosil qiling! Ovoz qo'yilganda dastur uni tinglab matnga aylantiradi.</p>
+                </div>
+                <button type="button" class="btn btn-primary" id="startExtractBtn" onclick="startAudioExtraction()" style="width: 100%; justify-content: center; background: var(--accent); padding: 12px;">
+                    <i class="fa-solid fa-ear-listen"></i> Eshitish va Tahlil qilish
+                </button>
+            </div>
+
+            <div class="form-group" id="transcriptResultGroup" style="display: none;">
+                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--income);">Tahlil qilingan matn (Tekshiring / o'zgartiring):</label>
+                <textarea id="audioTranscriptText" class="form-control" rows="4" placeholder="..."></textarea>
+                <button type="button" class="btn btn-primary" onclick="processEditedTranscript()" style="width: 100%; margin-top: 16px; justify-content: center; background: var(--income); padding: 12px;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Matnni daromad/xarajatga aylantirish
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form -->
     <div id="transactionModal" class="modal">
         <div class="modal-content glass">
             <div class="modal-header">
-                <h2>Yangi Amaliyot</h2>
+                <h2 id="modalTitle">Yangi Amaliyot</h2>
                 <button class="btn-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
+            
             <div class="type-toggle">
                 <button type="button" class="type-toggle-btn expense" id="btnTypeExpense" onclick="setTransactionType('expense')">Xarajat</button>
-                <button type="button" class="type-toggle-btn active income" id="btnTypeIncome" onclick="setTransactionType('income')">Daromad</button>
+                <button type="button" class="type-toggle-btn income" id="btnTypeIncome" onclick="setTransactionType('income')">Daromad</button>
             </div>
-            <button type="button" class="btn btn-voice" id="btnVoice" style="width:100%; margin-bottom: 20px; justify-content:center;">
-                <i class="fa-solid fa-microphone"></i> Ovozli kiritish
-            </button>
-            <form id="transactionForm">
-                <div class="form-group">
-                    <label>Summa (UZS)</label>
-                    <input type="number" id="amount" class="form-control" required min="1" step="1" placeholder="0">
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button type="button" class="btn btn-voice" id="btnVoice" onclick="startVoiceRecognition()" style="flex: 1; margin: 0; padding: 12px; font-size: 14px;">
+                    <i class="fa-solid fa-microphone"></i> Ovozdan
+                </button>
+                <button type="button" class="btn" id="btnUploadAudio" onclick="openAudioImportModal()" style="flex: 1; background: rgba(59, 130, 246, 0.2); border: 1px solid var(--accent); color: var(--text-main); margin: 0; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500;">
+                    <i class="fa-solid fa-file-audio"></i> Fayldan
+                </button>
+            </div>
+
+            <form id="transactionForm" onsubmit="handleAddTransaction(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Summa</label>
+                        <input type="number" id="amount" class="form-control" required min="1" step="0.01" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Valyuta</label>
+                        <select id="currency" class="form-control" required>
+                            <option value="UZS">UZS (So'm)</option>
+                            <option value="USD">USD (Dollar)</option>
+                            <option value="EUR">EUR (Yevro)</option>
+                            <option value="RUB">RUB (Rubl)</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Kategoriya</label>
                     <select id="category" class="form-control" required></select>
                 </div>
+                <!-- Custom Category Input -->
+                <div class="form-group" id="customCatGroup" style="display: none; margin-top: -10px;">
+                    <input type="text" id="customCategory" class="form-control" placeholder="O'z toifangizni kiriting" style="border-color: var(--accent);">
+                </div>
+
                 <div class="form-group">
                     <label>Sana</label>
                     <input type="date" id="date" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label>Izoh (ixtiyoriy)</label>
-                    <input type="text" id="description" class="form-control" placeholder="Masalan: Maosh qabul qilindi">
+                    <input type="text" id="description" class="form-control" placeholder="Xarid, mijoz va h.k">
                 </div>
-                <button type="submit" class="btn btn-primary btn-submit">Saqlash</button>
+                <button type="submit" class="btn btn-primary" style="width:100%">Saqlash</button>
             </form>
         </div>
     </div>
 
-    <script src="app.js"></script>
-    <script>document.addEventListener('DOMContentLoaded', () => initApp('daromad'));</script>
+    <script>
+        // CUSTOM DIALOG SYSTEM
+        let dialogResolve = null;
+        let dialogType = null;
+
+        function showCustomDialog(options) {
+            return new Promise((resolve) => {
+                dialogResolve = resolve;
+                dialogType = options.type || 'alert'; 
+
+                document.getElementById('dialogTitle').innerText = options.title || 'Diqqat';
+                document.getElementById('dialogTitle').style.color = options.danger ? 'var(--expense)' : 'var(--text-main)';
+                document.getElementById('dialogMessage').innerText = options.message || '';
+                
+                const inputEl = document.getElementById('dialogInput');
+                inputEl.style.display = dialogType === 'prompt' ? 'block' : 'none';
+                inputEl.value = options.defaultValue || '';
+                inputEl.placeholder = options.placeholder || '...';
+                
+                document.getElementById('dialogCancelBtn').style.display = dialogType === 'alert' ? 'none' : 'block';
+                document.getElementById('dialogConfirmBtn').innerText = options.confirmText || 'OK';
+                document.getElementById('dialogConfirmBtn').className = 'dialog-btn ' + (options.danger ? 'danger' : 'confirm');
+
+                document.getElementById('customDialogOverlay').classList.add('active');
+                if(dialogType === 'prompt') inputEl.focus();
+            });
+        }
+
+        function closeCustomDialog(action) {
+            document.getElementById('customDialogOverlay').classList.remove('active');
+            if(dialogResolve) {
+                if(dialogType === 'prompt') dialogResolve(action === 'confirm' ? document.getElementById('dialogInput').value : null);
+                else if(dialogType === 'confirm') dialogResolve(action === 'confirm');
+                else dialogResolve(true);
+                dialogResolve = null;
+            }
+        }
+
+        const categoryTemplates = {
+            business: {
+                expense: ['Ish haqi (To\'lov)', 'Soliqlar', 'Ijara (Arenda)', 'Reklama', 'Texnika va xomashyo', 'Transport', 'Xizmatlar', 'Boshqa'],
+                income: ['Savdo tushumi', 'Mijoz to\'lovi', 'Investitsiya', 'Hamkorlik', 'Boshqa']
+            },
+            family: {
+                expense: ['Oziq-ovqat', 'Transport / Benzin', 'Uy-joy (Kommunal)', 'Kafe va Restoran', 'Kiyim-kechak', 'Sog\'liqni saqlash', 'Ta\'lim', 'Boshqa'],
+                income: ['Oylik maosh', 'Frilans (Qo\'shimcha)', 'Sovg\'alar', 'Qarz qaytishi', 'Boshqa']
+            }
+        };
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function getActiveTemplate(fileName) {
+            const lower = fileName.toLowerCase();
+            if(lower.includes('biznes') || lower.includes('ish') || lower.includes('loyiha') || lower.includes('do\'kon') || lower.includes('kompaniya')) {
+                return categoryTemplates.business;
+            }
+            return categoryTemplates.family;
+        }
+
+        // FILE MANAGEMENT SYSTEM
+        // AUTHENTICATION SYSTEM
+        let activeUser = localStorage.getItem('finmap_uz_active_user');
+        let usersDB = JSON.parse(localStorage.getItem('finmap_uz_usersDB')) || {};
+        let authMode = 'login'; 
+
+        function toggleAuthMode() {
+            authMode = authMode === 'login' ? 'register' : 'login';
+            document.getElementById('authTitle').innerText = authMode === 'login' ? 'Tizimga kirish' : "Ro'yxatdan o'tish";
+            document.getElementById('authBtn').innerText = authMode === 'login' ? 'Kirish' : "Ro'yxatdan o'tish";
+            document.getElementById('authToggleText').innerText = authMode === 'login' ? "Akkaunt yo'qmi? Ro'yxatdan o'tish" : "Tizimga kirish (< Ortga)";
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const un = document.getElementById('authUsername').value.trim().toLowerCase();
+            const pw = document.getElementById('authPassword').value;
+
+            if(authMode === 'register') {
+                if(usersDB[un]) { await showCustomDialog({title: 'Xatolik', message: 'Bu foydalanuvchi nomi band qilingan!', danger: true}); return; }
+                usersDB[un] = pw;
+                localStorage.setItem('finmap_uz_usersDB', JSON.stringify(usersDB));
+                await showCustomDialog({title: 'Muvaffaqiyat', message: "Muvaffaqiyatli ro'yxatdan o'tdingiz!"});
+                loginUser(un);
+            } else {
+                if(usersDB[un] && usersDB[un] === pw) {
+                    loginUser(un);
+                } else {
+                    await showCustomDialog({title: 'Xatolik', message: 'Login yoki Parol xato!', danger: true});
+                }
+            }
+        }
+
+        function loginUser(un) {
+            activeUser = un;
+            localStorage.setItem('finmap_uz_active_user', activeUser);
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('authForm').reset();
+            loadUserData();
+        }
+
+        async function confirmLogout() {
+            let confirmed = await showCustomDialog({type: 'confirm', title: 'Tizimdan chiqish', message: "Haqiqatan ham hisobingizdan chiqmoqchimisiz?", danger: true, confirmText: 'Chiqish'});
+            if(confirmed) logoutUser();
+        }
+
+        function logoutUser() {
+            activeUser = null;
+            localStorage.removeItem('finmap_uz_active_user');
+            document.getElementById('authScreen').style.display = 'flex';
+            
+            files = []; currentFileId = null; transactions = [];
+            document.getElementById('transactionsContainerMain').innerHTML = '';
+            document.getElementById('transactionsContainerIncome').innerHTML = '';
+            document.getElementById('transactionsContainerExpense').innerHTML = '';
+            document.getElementById('filesList').innerHTML = '';
+            document.getElementById('total-balance').innerHTML = '';
+            document.getElementById('total-income').innerHTML = '';
+            document.getElementById('total-expense').innerHTML = '';
+            document.getElementById('currentFileName').innerText = '';
+            if(mainChartInst) mainChartInst.destroy();
+            if(incomeCategoryChartInst) incomeCategoryChartInst.destroy();
+            if(expenseCategoryChartInst) expenseCategoryChartInst.destroy();
+            
+            isProfilePwVisible = false;
+            if(document.getElementById('profilePassword')) {
+                document.getElementById('profilePassword').innerText = '••••••••';
+                document.getElementById('profilePasswordIcon').className = 'fa-solid fa-eye';
+            }
+        }
+
+        let isProfilePwVisible = false;
+        function toggleProfilePassword() {
+            const pwEl = document.getElementById('profilePassword');
+            const icon = document.getElementById('profilePasswordIcon');
+            if(isProfilePwVisible) {
+                pwEl.innerText = '••••••••';
+                icon.className = 'fa-solid fa-eye';
+                isProfilePwVisible = false;
+            } else {
+                pwEl.innerText = usersDB[activeUser] || 'Noma\'lum';
+                icon.className = 'fa-solid fa-eye-slash';
+                isProfilePwVisible = true;
+            }
+        }
+
+        // FILE MANAGEMENT SYSTEM
+        let files = [];
+        let currentFileId = null;
+        let editingTxId = null; 
+        let transactions = [];
+        let currentType = 'expense';
+        let currentTab = 'dashboard';
+        let activeCategories = categoryTemplates.family;
+
+        function getFilesKey() { return `finmap_uz_files_${activeUser}`; }
+        function getCurrentFileKey() { return `finmap_uz_current_file_${activeUser}`; }
+        function getDataKey(fid) { return `finmap_uz_data_${activeUser}_${fid}`; }
+
+        function loadUserData() {
+            if(!activeUser) return;
+            files = JSON.parse(localStorage.getItem(getFilesKey())) || [{id: 'default_file', name: 'Asosiy Hamyon'}];
+            currentFileId = localStorage.getItem(getCurrentFileKey()) || 'default_file';
+            if (!files.find(f => f.id === currentFileId)) {
+                if(files.length > 0) currentFileId = files[0].id;
+                else { files = [{id: 'default_file', name: 'Asosiy Hamyon'}]; currentFileId = 'default_file'; }
+            }
+            loadFile(currentFileId);
+        }
+
+        const formatCurrency = (amount, cur = 'UZS') => {
+            return new Intl.NumberFormat('uz-UZ', { style: 'currency', currency: cur, maximumFractionDigits: (cur==='UZS' || cur==='RUB') ? 0 : 2 }).format(amount);
+        };
+
+        const formatDate = (dateStr) => {
+            return new Intl.DateTimeFormat('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(dateStr));
+        };
+
+        // Custom Category Listen
+        document.getElementById('category').addEventListener('change', function(e) {
+            if(e.target.value === 'Boshqa') {
+                document.getElementById('customCatGroup').style.display = 'flex';
+                document.getElementById('customCategory').focus();
+            } else {
+                document.getElementById('customCatGroup').style.display = 'none';
+                document.getElementById('customCategory').value = '';
+            }
+        });
+
+        // --- Core File System & Template loader ---
+        function loadFile(fileId) {
+            if(!activeUser) return;
+            currentFileId = fileId;
+            localStorage.setItem(getCurrentFileKey(), currentFileId);
+            const fileObj = files.find(f => f.id === fileId);
+            if(!fileObj) return;
+            document.getElementById('currentFileName').innerText = fileObj.name;
+            activeCategories = getActiveTemplate(fileObj.name);
+            transactions = JSON.parse(localStorage.getItem(getDataKey(currentFileId))) || [];
+            
+            if(window.innerWidth <= 1024) {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebarOverlay').classList.remove('active');
+            }
+
+            renderSidebarFiles();
+            refreshUI();
+            updateCategoriesUI();
+        }
+
+        async function createNewFile() {
+            let fileName = await showCustomDialog({type: 'prompt', title: 'Yangi loyiha', message: 'Yangi fayl (loyiha) nomini kiriting:', placeholder: 'Masalan: Mart oyi, Biznes hisobot'});
+            if (!fileName || fileName.trim() === '') return;
+            let newId = 'file_' + Date.now();
+            files.push({id: newId, name: fileName.trim()});
+            localStorage.setItem(getFilesKey(), JSON.stringify(files));
+            loadFile(newId);
+        }
+
+        async function renameFile(fileId, event) {
+            event.stopPropagation();
+            let fileObj = files.find(f => f.id === fileId);
+            let newName = await showCustomDialog({type: 'prompt', title: 'Nomni o\'zgartirish', message: 'Fayl uchun yangi nom kiriting:', defaultValue: fileObj.name});
+            if(newName && newName.trim() !== '') {
+                fileObj.name = newName.trim();
+                localStorage.setItem(getFilesKey(), JSON.stringify(files));
+                if(currentFileId === fileId) {
+                    document.getElementById('currentFileName').innerText = fileObj.name;
+                    activeCategories = getActiveTemplate(fileObj.name);
+                    updateCategoriesUI();
+                    refreshUI(); 
+                }
+                renderSidebarFiles();
+            }
+        }
+
+        async function deleteFile(fileId, event) {
+            event.stopPropagation();
+            if(files.length <= 1) { await showCustomDialog({title: 'Ogohlantirish', message: "Kamida bitta loyiha bo'lishi shart!", danger: true}); return; }
+            let confirmed = await showCustomDialog({type: 'confirm', title: 'Loyihani O\'chirish', message: "DIQQAT! Agar ushbu loyihani o'chirsangiz, barcha yozuvlar yo'qoladi. Davom etasizmi?", danger: true, confirmText: 'O\'chirish'});
+            if(confirmed) {
+                files = files.filter(f => f.id !== fileId);
+                localStorage.removeItem(getDataKey(fileId));
+                localStorage.setItem(getFilesKey(), JSON.stringify(files));
+                if(currentFileId === fileId) loadFile(files[0].id);
+                else { renderSidebarFiles(); refreshUI(); }
+            }
+        }
+
+        function renderSidebarFiles() {
+            const list = document.getElementById('filesList');
+            list.innerHTML = '';
+            files.forEach(f => {
+                const isActive = (f.id === currentFileId);
+                const typ = getActiveTemplate(f.name) === categoryTemplates.business ? 'fa-briefcase' : 'fa-folder';
+                list.innerHTML += `
+                    <button class="nav-item ${isActive ? 'active' : ''}" onclick="loadFile('${f.id}')">
+                        <div class="nav-item-content">
+                            <i class="fa-solid ${typ}"></i>
+                            <div style="display:flex; flex-direction:column; overflow:hidden;">
+                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${f.name}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap: 4px;">
+                            <i class="fa-solid fa-pen btn-action edit" style="font-size:12px; padding:4px;" onclick="renameFile('${f.id}', event)" title="O'zgartirish"></i>
+                            <i class="fa-solid fa-trash-can btn-action delete" style="font-size:12px; padding:4px;" onclick="deleteFile('${f.id}', event)" title="O'chirish"></i>
+                        </div>
+                    </button>
+                `;
+            });
+        }
+
+        // INTELLIGENT VOICE NLP
+        function startVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { alert("Kechirasiz, qurilmangiz ovozni qo'llab-quvvatlamaydi."); return; }
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'uz-UZ';
+            recognition.interimResults = false;
+            
+            const voiceBtn = document.getElementById('btnVoice');
+            voiceBtn.innerHTML = '<i class="fa-solid fa-microphone-lines fa-fade"></i> Gapiring...';
+
+            recognition.onresult = (event) => {
+                let transcript = event.results[0][0].transcript;
+                const descInput = document.getElementById('description');
+                const amountInput = document.getElementById('amount');
+                const currSelect = document.getElementById('currency');
+                const catSelect = document.getElementById('category');
+                const customCatGrp = document.getElementById('customCatGroup');
+                const customCatInput = document.getElementById('customCategory');
+                
+                let lowerData = transcript.toLowerCase();
+                
+                // 1. EXTRACT AMOUNT: Fixes text like 'yigirma besh ming so'm'
+                let amount = 0;
+                let cleanData = lowerData.replace(/(^|\\s)([-+]?\\d+)\\s+(?=\\d)/g, '$1$2').trim(); // merges disjoint numbers
+                
+                // numbers mapping
+                const wordNumbers = { 'bir': 1, 'ikki': 2, 'uch': 3, 'to\'rt': 4, 'besh': 5, 'olti': 6, 'yetti': 7, 'sakkiz': 8, 'to\'qqiz': 9, 'o\'n': 10, 'yigirma': 20, 'o\'ttiz': 30, 'qirq': 40, 'ellik': 50, 'oltmish': 60, 'yetmish': 70, 'sakson': 80, 'to\'qson': 90 };
+                
+                const digitMatch = cleanData.match(/\\d+/g);
+                if(digitMatch) {
+                    let val = parseFloat(digitMatch[0]);
+                    if(cleanData.includes('yuz') && val < 100) val *= 100;
+                    if(cleanData.includes('ming') && val < 1000) val *= 1000;
+                    if(cleanData.includes('million') && val < 1000000) val *= 1000000;
+                    amount = val;
+                } else {
+                    let tempSum = 0;
+                    let numWords = cleanData.split(/[\s,.'"-]+/);
+                    for(let w of numWords) {
+                        if(wordNumbers[w]) tempSum += wordNumbers[w];
+                        // Ovozli matnni tahlil qilish davomi
+                        if(w === 'yuz') tempSum *= 100;
+                        if(w === 'ming') tempSum *= 1000;
+                        if(w === 'million') tempSum *= 1000000;
+                    }
+                    amount = tempSum;
+                }
+
+                if(amount > 0) amountInput.value = amount;
+
+                // 2. EXTRACT CURRENCY
+                let detectedCur = 'UZS';
+                if(lowerData.includes('dollar') || lowerData.includes('usd') || lowerData.includes('baks')) detectedCur = 'USD';
+                else if(lowerData.includes('rubl') || lowerData.includes('rub')) detectedCur = 'RUB';
+                else if(lowerData.includes('yevro') || lowerData.includes('euro')) detectedCur = 'EUR';
+                currSelect.value = detectedCur;
+
+                // 3. SMART CATEGORY MATCHING (based on active template)
+                let matchedCat = null;
+                const availableCats = activeCategories[currentType];
+                
+                for(let cat of availableCats) {
+                    if(lowerData.includes(cat.toLowerCase())) { matchedCat = cat; break; }
+                }
+
+                if(!matchedCat) {
+                    if((lowerData.includes('taksi') || lowerData.includes('avtobus') || lowerData.includes('benzin')) && availableCats.find(c=>c.includes('Transport'))) {
+                        matchedCat = availableCats.find(c=>c.includes('Transport'));
+                    } else if((lowerData.includes('oylik') || lowerData.includes('maosh')) && availableCats.find(c=>c.includes('haqi') || c.includes('maosh'))) {
+                        matchedCat = availableCats.find(c=>c.includes('haqi') || c.includes('maosh'));
+                    } else if((lowerData.includes('restoran') || lowerData.includes('ovqat') || lowerData.includes('go\'sht')) && availableCats.find(c=>c.includes('Oziq-ovqat') || c.includes('Kafe'))) {
+                        matchedCat = availableCats.find(c=>c.includes('Oziq-ovqat') || c.includes('Kafe'));
+                    } else if((lowerData.includes('arenda') || lowerData.includes('ijara')) && availableCats.find(c=>c.includes('Ijara'))) {
+                        matchedCat = availableCats.find(c=>c.includes('Ijara'));
+                    }
+                }
+                
+                if(matchedCat) {
+                    catSelect.value = matchedCat;
+                    customCatGrp.style.display = 'none';
+                    customCatInput.value = '';
+                } else {
+                    // CUSTOM CATEGORY INTELLIGENCE
+                    catSelect.value = 'Boshqa';
+                    customCatGrp.style.display = 'flex';
+                    
+                    let customIdea = lowerData.replace(/\\d+/g, '').replace('ming','').replace('million','')
+                                     .replace('yuz','').replace(' dollar ', ' ').replace(' so\'m ', ' ').replace(' yevro ', ' ')
+                                     .replace(' uchun ', ' ').trim();
+                    
+                    for(let w in wordNumbers) customIdea = customIdea.replace(w, ''); 
+                    customIdea = customIdea.trim();
+
+                    if(customIdea.length > 2) {
+                        customCatInput.value = customIdea.charAt(0).toUpperCase() + customIdea.slice(1);
+                    }
+                }
+
+                descInput.value = transcript;
+                voiceBtn.innerHTML = '<i class="fa-solid fa-check"></i> Ovozli tasdiqlandi';
+            };
+
+            recognition.onerror = (e) => { voiceBtn.innerHTML = '<i class="fa-solid fa-microphone"></i> Xato yuz berdi'; };
+            recognition.onend = () => { setTimeout(() => { voiceBtn.innerHTML = '<i class="fa-solid fa-microphone"></i> Ovozli kiritish'; }, 1500); };
+            recognition.start();
+        }
+
+        // --- Modals ---
+        function openModal(txId = null) {
+            document.getElementById('transactionModal').classList.add('active');
+            const customCatGrp = document.getElementById('customCatGroup');
+
+            if (txId && typeof txId === 'string') {
+                editingTxId = txId;
+                document.getElementById('modalTitle').innerText = 'Yozuvni Tahrirlash';
+                const tx = transactions.find(t => t.id === txId);
+
+                // Set type (updates category UI)
+                setTransactionType(tx.type);
+                
+                document.getElementById('amount').value = tx.amount;
+                document.getElementById('currency').value = tx.currency || 'UZS';
+                document.getElementById('date').value = tx.date;
+                document.getElementById('description').value = tx.description || '';
+                
+                // Set Category
+                const catSelect = document.getElementById('category');
+                const catOptions = Array.from(catSelect.options).map(o => o.value);
+                
+                if(catOptions.includes(tx.category)) {
+                    catSelect.value = tx.category;
+                    customCatGrp.style.display = 'none';
+                } else {
+                    catSelect.value = 'Boshqa';
+                    customCatGrp.style.display = 'flex';
+                    document.getElementById('customCategory').value = tx.category;
+                }
+            } else {
+                editingTxId = null;
+                document.getElementById('modalTitle').innerText = 'Yangi Amaliyot';
+                document.getElementById('transactionForm').reset();
+                document.getElementById('date').valueAsDate = new Date();
+                document.getElementById('currency').value = 'UZS';
+                customCatGrp.style.display = 'none';
+
+                if(currentTab === 'daromad') setTransactionType('income');
+                else setTransactionType('expense');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('transactionModal').classList.remove('active');
+            document.getElementById('transactionForm').reset();
+            document.getElementById('customCatGroup').style.display = 'none';
+        }
+
+        function setTransactionType(type) {
+            currentType = type;
+            document.getElementById('btnTypeExpense').classList.toggle('active', type === 'expense');
+            document.getElementById('btnTypeIncome').classList.toggle('active', type === 'income');
+            updateCategoriesUI();
+        }
+
+        function updateCategoriesUI() {
+            const select = document.getElementById('category');
+            select.innerHTML = '';
+            activeCategories[currentType].forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            });
+        }
+
+        function handleAddTransaction(e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('amount').value);
+            const currency = document.getElementById('currency').value;
+            let category = document.getElementById('category').value;
+            const date = document.getElementById('date').value;
+            const description = document.getElementById('description').value;
+
+            // Handle Custom Category
+            if (category === 'Boshqa') {
+                const customVal = document.getElementById('customCategory').value.trim();
+                if(customVal) category = customVal;
+            }
+
+            if(editingTxId) {
+                // UPDATE EXISTING
+                let tx = transactions.find(t => t.id === editingTxId);
+                if(tx) {
+                    tx.amount = amount;
+                    tx.currency = currency;
+                    tx.category = category;
+                    tx.date = date;
+                    tx.description = description;
+                    tx.type = currentType;
+                }
+            } else {
+                // CREATE NEW
+                transactions.push({
+                    id: Date.now().toString(),
+                    type: currentType, amount: amount, currency: currency, category: category, date: date, description: description
+                });
+            }
+
+            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            saveData();
+            closeModal();
+            refreshUI(); 
+        }
+
+        async function deleteTransaction(id) {
+            let confirmed = await showCustomDialog({type: 'confirm', title: 'Yozuvni o\'chirish', message: "Ushbu yozuvni chindan ham o'chirib tashlamoqchimisiz?", danger: true, confirmText: 'O\'chirish'});
+            if(confirmed) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveData();
+                refreshUI();
+            }
+        }
+
+        function saveData() {
+            if(!activeUser) return;
+            localStorage.setItem(getDataKey(currentFileId), JSON.stringify(transactions));
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            ['dashboard', 'daromad', 'xarajat', 'profil'].forEach(t => {
+                if(document.getElementById('nav-' + t)) document.getElementById('nav-' + t).classList.remove('active');
+                if(document.getElementById('tab-' + t)) document.getElementById('tab-' + t).classList.remove('active');
+            });
+            if(document.getElementById('nav-' + tabId)) document.getElementById('nav-' + tabId).classList.add('active');
+            if(document.getElementById('tab-' + tabId)) document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        // --- MULTI-CURRENCY RENDERING ---
+        function generateCurrencyBlock(sumsObj) {
+            let html = '';
+            let hasData = false;
+            for(let cur in sumsObj) {
+                if(sumsObj[cur] > 0 || sumsObj[cur] < 0 || (cur === 'UZS' && !hasData)) {
+                    html += `<div class="currency-line">${formatCurrency(sumsObj[cur], cur)}</div>`;
+                    hasData = true;
+                }
+            }
+            if(!hasData) html = `<div class="currency-line">${formatCurrency(0, 'UZS')}</div>`;
+            return html;
+        }
+
+        function renderTableHtml(dataToRender) {
+            if (dataToRender.length === 0) {
+                return `<div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <i class="fa-solid fa-receipt fa-3x" style="opacity: 0.5; margin-bottom: 16px;"></i>
+                    <p>Ushbu bo'limda yozuvlar yo'q.</p>
+                </div>`;
+            }
+            let html = `<table><thead>
+                <tr><th>Sana</th><th>Kategoriya</th><th>Izoh</th><th>Summa</th><th style="text-align:right;">Boshqaruv</th></tr>
+            </thead><tbody>`;
+
+            dataToRender.forEach(t => {
+                const sign = t.type === 'income' ? '+' : '-';
+                const cur = t.currency || 'UZS';
+                html += `
+                    <tr>
+                        <td>${formatDate(t.date)}</td>
+                        <td><span class="cat-badge">${t.category}</span></td>
+                        <td>${t.description || '-'}</td>
+                        <td class="amount ${t.type}">${sign} ${formatCurrency(t.amount, cur)}</td>
+                        <td style="text-align: right;">
+                            <button class="btn-action edit" onclick="openModal('${t.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-action delete" onclick="deleteTransaction('${t.id}')"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        }
+
+        function refreshUI() {
+            const sumIncome = {}; const sumExpense = {}; const sumBal = {};
+            const curSet = new Set(['UZS']);
+            
+            const reqInitCur = (c) => { 
+                if(!sumIncome[c]) sumIncome[c]=0; 
+                if(!sumExpense[c]) sumExpense[c]=0; 
+                if(!sumBal[c]) sumBal[c]=0; 
+            };
+            reqInitCur('UZS');
+
+            transactions.forEach(t => {
+                const c = t.currency || 'UZS';
+                curSet.add(c);
+                reqInitCur(c);
+                if(t.type === 'income') { sumIncome[c] += t.amount; sumBal[c] += t.amount; }
+                if(t.type === 'expense') { sumExpense[c] += t.amount; sumBal[c] -= t.amount; }
+            });
+
+            document.getElementById('total-balance').innerHTML = generateCurrencyBlock(sumBal);
+            document.getElementById('total-income').innerHTML = generateCurrencyBlock(sumIncome);
+            document.getElementById('total-expense').innerHTML = generateCurrencyBlock(sumExpense);
+            
+            document.getElementById('pageTotalIncome').innerHTML = generateCurrencyBlock(sumIncome);
+            document.getElementById('pageTotalExpense').innerHTML = generateCurrencyBlock(sumExpense);
+
+            const incomes = transactions.filter(t => t.type === 'income');
+            const expenses = transactions.filter(t => t.type === 'expense');
+
+            document.getElementById('transactionsContainerMain').innerHTML = renderTableHtml(transactions.slice(0, 10));
+            document.getElementById('transactionsContainerIncome').innerHTML = renderTableHtml(incomes);
+            document.getElementById('transactionsContainerExpense').innerHTML = renderTableHtml(expenses);
+
+            if (activeUser) {
+                document.getElementById('profileUsername').innerText = '@' + activeUser;
+                document.getElementById('profileFileCount').innerText = files.length;
+                let allTxCount = 0;
+                let balances = {};
+                
+                files.forEach(f => {
+                    let tx = JSON.parse(localStorage.getItem(getDataKey(f.id))) || [];
+                    allTxCount += tx.length;
+                    
+                    tx.forEach(t => {
+                        let cur = t.currency || 'UZS';
+                        if(!balances[cur]) balances[cur] = 0;
+                        if(t.type === 'income') balances[cur] += t.amount;
+                        else balances[cur] -= t.amount;
+                    });
+                });
+                
+                document.getElementById('profileTxCount').innerText = allTxCount;
+                
+                // Show Net Profit calculations dynamically
+                let profitHtml = '';
+                let hasData = false;
+                for(let cur in balances) {
+                    if (balances[cur] !== 0 || (cur === 'UZS' && !hasData)) {
+                        let cl = balances[cur] >= 0 ? 'var(--income)' : 'var(--expense)';
+                        let sign = balances[cur] >= 0 ? '+' : '';
+                        profitHtml += `<div style="color: ${cl}; margin-top: 4px;">${sign}${formatCurrency(balances[cur], cur)}</div>`;
+                        hasData = true;
+                    }
+                }
+                if(!hasData) profitHtml = `<div style="color: var(--text-main);">${formatCurrency(0, 'UZS')}</div>`;
+                document.getElementById('profileTotalProfit').innerHTML = profitHtml;
+            }
+
+            updateCharts();
+        }
+
+        // CHART LOGIC
+        let mainChartInst = null; 
+        let expenseCategoryChartInst = null;
+        let incomeCategoryChartInst = null;
+
+        Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = "'Inter', sans-serif";
+
+        function updateCharts() {
+            const mainCtx = document.getElementById('mainChart');
+            const expCtx = document.getElementById('expenseCategoryChart');
+            const incCtx = document.getElementById('incomeCategoryChart');
+            if(!mainCtx || !expCtx || !incCtx) return;
+
+            let curCounts = {};
+            let primaryCur = 'UZS';
+            let maxC = 0;
+            transactions.forEach(t => {
+                const c = t.currency || 'UZS';
+                curCounts[c] = (curCounts[c]||0)+1;
+                if(curCounts[c] > maxC) { maxC = curCounts[c]; primaryCur = c; }
+            });
+
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            let datesMap = new Map();
+            let expCatMap = new Map();
+            let incCatMap = new Map();
+
+            for(let i=14; i>=0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                datesMap.set(d.toISOString().split('T')[0], { income: 0, expense: 0 });
+            }
+
+            transactions.forEach(t => {
+                const c = t.currency || 'UZS';
+                if(c !== primaryCur) return; 
+
+                const tDate = new Date(t.date);
+                if(tDate >= thirtyDaysAgo) {
+                    const dStr = t.date;
+                    if(datesMap.has(dStr)) {
+                        let current = datesMap.get(dStr);
+                        if(t.type === 'income') current.income += t.amount;
+                        else current.expense += t.amount;
+                    }
+                }
+                if(t.type === 'expense') {
+                    const currentVal = expCatMap.get(t.category) || 0;
+                    expCatMap.set(t.category, currentVal + t.amount);
+                } else if(t.type === 'income') {
+                    const currentVal = incCatMap.get(t.category) || 0;
+                    incCatMap.set(t.category, currentVal + t.amount);
+                }
+            });
+
+            mainCtx.parentElement.previousElementSibling.innerText = `Dinamika (${primaryCur} valyutasida)`;
+            expCtx.parentElement.previousElementSibling.innerText = `Xarajatlar Tuzilmasi (${primaryCur})`;
+            incCtx.parentElement.previousElementSibling.innerText = `Daromadlar Tuzilmasi (${primaryCur})`;
+
+            const labelsMain = Array.from(datesMap.keys()).map(d => formatDate(d).slice(0, 6));
+            const dataIncome = Array.from(datesMap.values()).map(v => v.income);
+            const dataExpense = Array.from(datesMap.values()).map(v => v.expense);
+
+            if(mainChartInst) mainChartInst.destroy();
+            mainChartInst = new Chart(mainCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labelsMain,
+                    datasets: [
+                        { label: 'Daromadlar', data: dataIncome, backgroundColor: 'rgba(16, 185, 129, 0.8)', borderRadius: 4 },
+                        { label: 'Xarajatlar', data: dataExpense, backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: 4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const colorPaletteExp = ['#ef4444', '#f97316', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6', '#f43f5e'];
+            const colorPaletteInc = ['#10b981', '#3b82f6', '#0ea5e9', '#06b6d4', '#22c55e', '#84cc16', '#eab308', '#2dd4bf'];
+
+            const renderDoughnut = (chartInst, ctx, mapData, palette) => {
+                const labels = Array.from(mapData.keys());
+                const data = Array.from(mapData.values());
+                if(chartInst) chartInst.destroy();
+                if(data.length === 0) {
+                    return new Chart(ctx.getContext('2d'), {
+                        type: 'doughnut', data: { labels: ['Ma\'lumot yo\'q'], datasets: [{ data: [1], backgroundColor: ['rgba(255,255,255,0.1)'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{tooltip:{enabled:false}} }
+                    });
+                } else {
+                    return new Chart(ctx.getContext('2d'), {
+                        type: 'doughnut', data: { labels: labels, datasets: [{ data: data, backgroundColor: palette, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right' } } }
+                    });
+                }
+            };
+
+            expenseCategoryChartInst = renderDoughnut(expenseCategoryChartInst, expCtx, expCatMap, colorPaletteExp);
+            incomeCategoryChartInst = renderDoughnut(incomeCategoryChartInst, incCtx, incCatMap, colorPaletteInc);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // По умолчанию демонстрируем нужную вкладку через hash (daromad/xarajat/dashboard)
+            const hash = window.location.hash.replace('#', '').toLowerCase();
+            const allowedTabs = ['dashboard', 'daromad', 'xarajat', 'profil'];
+            if (allowedTabs.includes(hash)) {
+                switchTab(hash);
+            } else {
+                switchTab('dashboard');
+            }
+
+            if(activeUser) {
+                document.getElementById('authScreen').style.display = 'none';
+                loadUserData();
+            } else {
+                document.getElementById('authScreen').style.display = 'flex';
+            }
+        });
+
+        // ------------------------- AUDIO IMPORT SYSTEM -------------------------
+        let audioRec = null;
+
+        function openAudioImportModal() {
+            document.getElementById('audioImportModal').classList.add('active');
+            document.getElementById('audioFile').value = '';
+            document.getElementById('audioPlayerContainer').style.display = 'none';
+            document.getElementById('transcriptResultGroup').style.display = 'none';
+            document.getElementById('audioTranscriptText').value = '';
+            closeModal();
+        }
+
+        function closeAudioImportModal() {
+            document.getElementById('audioImportModal').classList.remove('active');
+            const player = document.getElementById('audioPlayer');
+            player.pause();
+            if(audioRec) { audioRec.stop(); audioRec = null; }
+        }
+
+        function loadAudioFile(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const url = URL.createObjectURL(file);
+                const player = document.getElementById('audioPlayer');
+                player.src = url;
+                document.getElementById('audioPlayerContainer').style.display = 'block';
+                document.getElementById('transcriptResultGroup').style.display = 'none';
+            }
+        }
+
+        function startAudioExtraction() {
+            const player = document.getElementById('audioPlayer');
+            const btn = document.getElementById('startExtractBtn');
+            const transcriptBox = document.getElementById('audioTranscriptText');
+            
+            if (!('webkitSpeechRecognition' in window)) {
+                showCustomDialog({title: 'Xatolik', message: 'Brauzeringiz ovoz aniqlashni qo\'llab-quvvatlamaydi.', danger: true});
+                return;
+            }
+
+            audioRec = new webkitSpeechRecognition();
+            audioRec.lang = 'uz-UZ';
+            audioRec.continuous = true;
+            audioRec.interimResults = true;
+            
+            let finalTrans = '';
+
+            audioRec.onstart = () => {
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Eshitilyapti...';
+                document.getElementById('transcriptResultGroup').style.display = 'block';
+                player.play();
+            };
+
+            audioRec.onresult = (e) => {
+                let interim = '';
+                for(let i = e.resultIndex; i < e.results.length; i++) {
+                    if(e.results[i].isFinal) finalTrans += e.results[i][0].transcript + ' ';
+                    else interim += e.results[i][0].transcript;
+                }
+                transcriptBox.value = finalTrans + interim;
+            };
+
+            player.onended = () => {
+                if(audioRec) audioRec.stop();
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Tahlil yakunlandi';
+                showCustomDialog({title: 'Tizim xabari', message: 'Tahlil tugadi. Iltimos matnni tekshirib chiqing va tasdiqlang!'});
+            };
+
+            audioRec.onerror = () => {
+                if(audioRec) audioRec.stop();
+                btn.innerHTML = '<i class="fa-solid fa-ear-listen"></i> Qayta eshitish';
+            };
+            
+            audioRec.start();
+        }
+
+        function processEditedTranscript() {
+            const transcript = document.getElementById('audioTranscriptText').value.trim();
+            if(!transcript) { showCustomDialog({title: 'Xatolik', message: "Matn bo'sh! Iltimos matn kiriting.", danger: true}); return; }
+            
+            closeAudioImportModal();
+            openModal(); // Open empty transaction modal
+            
+            const amountInput = document.getElementById('amount');
+            const descInput = document.getElementById('description');
+            const currSelect = document.getElementById('currency');
+            
+            let lowerData = transcript.toLowerCase();
+            let cleanData = lowerData
+                .replace(/ming/g, 'ming')
+                .replace(/million/g, 'million')
+                .replace(/yuz/g, 'yuz')
+                .replace(/dollar/g, 'dollar')
+                .replace(/yevro/g, 'yevro')
+                .replace(/rubl/g, 'rubl')
+                .replace(/qarz/g, 'qarz');
+
+            const wordNumbers = { 'bir':1, 'ikki':2, 'uch':3, 'to\'rt':4, 'tort':4, 'besh':5, 'olti':6, 'yetti':7, 'sakkiz':8, 'to\'qqiz':9, 'toqqiz':9, 'o\'n':10, 'on':10, 'yigirma':20, 'o\'ttiz':30, 'ottiz':30, 'qirq':40, 'ellik':50, 'oltmish':60, 'yetmish':70, 'sakson':80, 'toqson':90 };
+
+            let amount = 0;
+            const digitMatch = cleanData.match(/\d+/g);
+            if(digitMatch) {
+                let val = parseFloat(digitMatch[0]);
+                if(cleanData.includes('yuz') && val < 100) val *= 100;
+                if(cleanData.includes('ming') && val < 1000) val *= 1000;
+                if(cleanData.includes('million') && val < 1000000) val *= 1000000;
+                amount = val;
+            } else {
+                let tempSum = 0;
+                let numWords = cleanData.split(/[\s,.'"-]+/);
+                for(let w of numWords) {
+                    if(wordNumbers[w]) tempSum += wordNumbers[w];
+                    if(w === 'yuz') tempSum *= 100;
+                    if(w === 'ming') tempSum *= 1000;
+                    if(w === 'million') tempSum *= 1000000;
+                }
+                amount = tempSum;
+            }
+
+            if(amount > 0) amountInput.value = amount;
+            
+            if(lowerData.includes('dollar')) currSelect.value = 'USD';
+            else if(lowerData.includes('yevro')) currSelect.value = 'EUR';
+            else if(lowerData.includes('rubl')) currSelect.value = 'RUB';
+            else currSelect.value = 'UZS';
+
+            if(lowerData.includes('topdim') || lowerData.includes('keldi') || lowerData.includes('daromad')) {
+                setTransactionType('income');
+            } else {
+                setTransactionType('expense');
+            }
+
+            let matchedCat = null;
+            const availableCats = activeCategories[currentType];
+            
+            for(let cat of availableCats) {
+                if(lowerData.includes(cat.toLowerCase())) { matchedCat = cat; break; }
+            }
+
+            if(!matchedCat) {
+                if((lowerData.includes('taksi') || lowerData.includes('avtobus') || lowerData.includes('benzin')) && availableCats.find(c=>c.includes('Transport'))) {
+                    matchedCat = availableCats.find(c=>c.includes('Transport'));
+                } else if((lowerData.includes('oylik') || lowerData.includes('maosh')) && availableCats.find(c=>c.includes('haqi') || c.includes('maosh'))) {
+                    matchedCat = availableCats.find(c=>c.includes('haqi') || c.includes('maosh'));
+                } else if((lowerData.includes('restoran') || lowerData.includes('ovqat') || lowerData.includes('go\'sht')) && availableCats.find(c=>c.includes('Oziq-ovqat') || c.includes('Kafe'))) {
+                    matchedCat = availableCats.find(c=>c.includes('Oziq-ovqat') || c.includes('Kafe'));
+                } else if((lowerData.includes('arenda') || lowerData.includes('ijara')) && availableCats.find(c=>c.includes('Ijara'))) {
+                    matchedCat = availableCats.find(c=>c.includes('Ijara'));
+                }
+            }
+            
+            const catSelect = document.getElementById('category');
+            const customCatGrp = document.getElementById('customCatGroup');
+            const customCatInput = document.getElementById('customCategory');
+            
+            if(matchedCat) {
+                catSelect.value = matchedCat;
+                customCatGrp.style.display = 'none';
+            } else {
+                catSelect.value = 'Boshqa';
+                customCatGrp.style.display = 'flex';
+                
+                let customIdea = lowerData.replace(/\d+/g, '').replace('ming','').replace('million','')
+                                 .replace('yuz','').replace(' dollar ', ' ').replace(' so\'m ', ' ').replace(' yevro ', ' ')
+                                 .replace(' uchun ', ' ').trim();
+                
+                for(let w in wordNumbers) customIdea = customIdea.replace(w, ''); 
+                customIdea = customIdea.trim();
+
+                if(customIdea.length > 2) {
+                    customCatInput.value = customIdea.charAt(0).toUpperCase() + customIdea.slice(1);
+                }
+            }
+
+            descInput.value = transcript;
+        }
+    </script>
 </body>
 </html>
