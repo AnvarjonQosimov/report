@@ -365,11 +365,16 @@
             <form id="authForm" onsubmit="handleAuth(event)">
                 <div class="form-group" style="text-align: left; margin-bottom: 12px;">
                     <label>Foydalanuvchi nomi</label>
-                    <input type="text" id="authUsername" class="form-control" required placeholder="Masalan: anvarjon">
+                    <input type="text" id="authUsername" class="form-control" required placeholder="Foydalanuvchi nomini kiriting">
                 </div>
-                <div class="form-group" style="text-align: left;">
+                <div class="form-group" style="text-align: left; margin-bottom: 12px; position: relative;">
                     <label>Parol</label>
-                    <input type="password" id="authPassword" class="form-control" required placeholder="Parolni kiriting">
+                    <div style="position: relative;">
+                        <input type="password" id="authPassword" class="form-control" required placeholder="Parolni kiriting" style="padding-right: 45px;">
+                        <button type="button" onclick="toggleAuthPasswordVisibility()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; display: flex; align-items: center; justify-content: center;">
+                            <i id="authPasswordIcon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; justify-content: center;" id="authBtn">Kirish</button>
             </form>
@@ -385,6 +390,15 @@
     <aside class="sidebar glass" id="sidebar">
         <div class="logo">
             <i class="fa-solid fa-chart-pie"></i> Hisobot Uz
+        </div>
+
+        <div class="sidebar-btns" style="display:flex; flex-direction:column; gap:8px; margin-bottom: 20px;">
+            <button class="nav-item" onclick="switchTab('profil')" style="width: 100%; border: 1px solid var(--accent); color: var(--text-main); background: rgba(59, 130, 246, 0.2); justify-content: center;">
+                <i class="fa-solid fa-user-astronaut"></i> Profil
+            </button>
+            <button class="nav-item" onclick="openNoteModal()" style="width: 100%; border: 1px solid var(--accent); color: var(--accent); background: rgba(59, 130, 246, 0.1); justify-content: center;">
+                <i class="fa-solid fa-note-sticky"></i> Zametka
+            </button>
         </div>
         
         <div class="sidebar-title">Mening Fayllarim</div>
@@ -411,16 +425,20 @@
                         <h1 id="currentFileName">Loyiha nomi</h1>
                     </div>
                 </div>
-                <button class="btn btn-primary" onclick="openModal()">
-                    <i class="fa-solid fa-plus"></i> Yangi yozuv
-                </button>
+                <div style="display:flex; gap: 10px;">
+                    <button class="btn" onclick="openNoteModal(currentFileId)" style="background: rgba(59, 130, 246, 0.15); border: 1px solid var(--accent); color: var(--text-main); font-size: 14px; padding: 10px 16px;">
+                        <i class="fa-solid fa-note-sticky"></i> Loyiha Zametkasi
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal()">
+                        <i class="fa-solid fa-plus"></i> Yangi yozuv
+                    </button>
+                </div>
             </div>
             
             <div class="top-tabs">
                 <button class="tab-btn active" id="nav-dashboard" onclick="switchTab('dashboard')"><i class="fa-solid fa-house"></i> Bosh sahifa</button>
                 <button class="tab-btn" id="nav-daromad" onclick="switchTab('daromad')"><i class="fa-solid fa-arrow-trend-up"></i> Daromadlar</button>
                 <button class="tab-btn" id="nav-xarajat" onclick="switchTab('xarajat')"><i class="fa-solid fa-arrow-trend-down"></i> Xarajatlar</button>
-                <button class="tab-btn" id="nav-profil" onclick="switchTab('profil')"><i class="fa-solid fa-user-astronaut"></i> Profil</button>
             </div>
         </header>
 
@@ -562,6 +580,76 @@
         </div>
     </div>
 
+    <!-- Note Modal -->
+    <div id="noteModal" class="modal">
+        <div class="modal-content glass" style="max-width: 550px; display: flex; flex-direction: column; max-height: 80vh;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 0;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fa-solid fa-note-sticky" style="color: var(--accent); font-size: 20px;"></i>
+                    <h2 id="noteModalTitle" style="margin: 0; font-size: 18px;">Zametkalar</h2>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-primary" onclick="addNewNote()" style="padding: 8px 16px; font-size: 13px;">
+                        <i class="fa-solid fa-plus"></i> Yangi
+                    </button>
+                    <button class="btn-close" onclick="closeNoteModal()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            
+            <div id="notesListContainer" style="flex: 1; overflow-y: auto; padding: 10px 0; min-height: 350px;">
+                <!-- Notes will be rendered here -->
+            </div>
+
+            <div style="border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; justify-content: flex-end;">
+                <button class="btn btn-primary" onclick="closeNoteModal()" style="padding: 10px 30px;">Yopish</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .note-item {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        .note-item:hover { background: rgba(255, 255, 255, 0.02); }
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .note-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .note-actions { display: flex; gap: 10px; opacity: 0; transition: 0.2s; }
+        .note-item:hover .note-actions { opacity: 1; }
+        .note-btn {
+            background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;
+        }
+        .note-btn:hover { color: var(--expense); }
+        .note-textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 15px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            padding: 0;
+            overflow: hidden;
+        }
+        .note-textarea::placeholder { color: rgba(255,255,255,0.2); }
+    </style>
+
     <!-- Modal Form -->
     <div id="transactionModal" class="modal">
         <div class="modal-content glass">
@@ -587,8 +675,52 @@
             <form id="transactionForm" onsubmit="handleAddTransaction(event)">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Summa</label>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label>Summa</label>
+                            <button type="button" onclick="toggleMiniCalc()" style="background:transparent; border:none; color:var(--accent); cursor:pointer; font-size:14px;"><i class="fa-solid fa-calculator"></i> Kalkulyator</button>
+                        </div>
                         <input type="number" id="amount" class="form-control" required min="1" step="0.01" placeholder="0">
+                        
+                        <!-- Mini Calculator Panel (Floating) -->
+                        <div id="miniCalc" class="glass" style="display:none; position: fixed; right: 20px; bottom: 20px; width: 280px; z-index: 10001; padding: 15px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); cursor: default; animation: slideUp 0.3s ease;">
+                            <div id="calcHeader" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; cursor: move; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                                <span style="font-size: 13px; font-weight: 600; color: var(--accent);"><i class="fa-solid fa-calculator"></i> Kalkulyator</span>
+                                <button type="button" onclick="toggleMiniCalc()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <!-- Result Screen -->
+                            <div id="calcScreen" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 12px; text-align: right; min-height: 45px; display: flex; align-items: center; justify-content: flex-end; font-size: 20px; font-weight: 700; color: white; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">0</div>
+                            
+                            <div style="grid-template-columns: repeat(4, 1fr); display: grid; gap: 8px;">
+                                <button type="button" class="calc-btn" onclick="calcInput('7')">7</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('8')">8</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('9')">9</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('/')">/</button>
+                                
+                                <button type="button" class="calc-btn" onclick="calcInput('4')">4</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('5')">5</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('6')">6</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('*')">*</button>
+                                
+                                <button type="button" class="calc-btn" onclick="calcInput('1')">1</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('2')">2</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('3')">3</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('-')">-</button>
+                                
+                                <button type="button" class="calc-btn" onclick="calcInput('0')">0</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('.')">.</button>
+                                <button type="button" class="calc-btn" style="background: var(--expense);" onclick="clearCalc()">C</button>
+                                <button type="button" class="calc-btn" onclick="calcInput('+')">+</button>
+                                
+                                <button type="button" class="calc-btn" style="grid-column: span 2; background: var(--income); margin-top: 5px;" onclick="solveCalc()">=</button>
+                                <button type="button" class="calc-btn" style="grid-column: span 2; background: var(--accent); margin-top: 5px; font-size: 13px;" onclick="transferResult()">Natijani kiritish</button>
+                            </div>
+                        </div>
+                        <style>
+                            @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+                            .calc-btn { padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; cursor: pointer; font-size: 15px; font-weight: 600; transition: 0.2s; }
+                            .calc-btn:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+                            .calc-btn:active { transform: translateY(0); }
+                        </style>
                     </div>
                     <div class="form-group">
                         <label>Valyuta</label>
@@ -623,6 +755,205 @@
     </div>
 
     <script>
+        // CALCULATOR SYSTEM
+        let calcExpression = "";
+        function toggleMiniCalc() {
+            const panel = document.getElementById('miniCalc');
+            if(panel.style.display === 'none' || !panel.style.display) {
+                panel.style.display = 'block';
+                makeDraggable(panel, document.getElementById('calcHeader'));
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+        function makeDraggable(el, header) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            header.onmousedown = dragMouseDown;
+            function dragMouseDown(e) { e.preventDefault(); pos3 = e.clientX; pos4 = e.clientY; document.onmouseup = closeDragElement; document.onmousemove = elementDrag; }
+            function elementDrag(e) { e.preventDefault(); pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY; pos3 = e.clientX; pos4 = e.clientY; el.style.top = (el.offsetTop - pos2) + "px"; el.style.left = (el.offsetLeft - pos1) + "px"; el.style.bottom = "auto"; el.style.right = "auto"; }
+            function closeDragElement() { document.onmouseup = null; document.onmousemove = null; }
+        }
+        function calcInput(val) {
+            calcExpression += val;
+            document.getElementById('calcScreen').innerText = calcExpression;
+        }
+        function clearCalc() {
+            calcExpression = "";
+            document.getElementById('calcScreen').innerText = "0";
+        }
+        function solveCalc() {
+            try {
+                const result = eval(calcExpression); 
+                document.getElementById('calcScreen').innerText = result;
+                calcExpression = result.toString();
+            } catch(e) {
+                showCustomDialog({title: 'Xatolik', message: 'Hisob-kitobda xato!', danger: true});
+            }
+        }
+        function transferResult() {
+            const result = document.getElementById('calcScreen').innerText;
+            if(!isNaN(result)) {
+                document.getElementById('amount').value = parseFloat(result);
+            }
+        }
+
+        // KEYBOARD SUPPORT FOR CALCULATOR
+        window.addEventListener('keydown', (e) => {
+            const calc = document.getElementById('miniCalc');
+            if (calc && calc.style.display !== 'none') {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return; 
+                }
+                const key = e.key;
+                if (/[0-9\+\-\*\/\.]/.test(key)) {
+                    calcInput(key);
+                } else if (key === 'Enter') {
+                    solveCalc();
+                } else if (key === 'Backspace') {
+                    calcExpression = calcExpression.toString().slice(0, -1);
+                    document.getElementById('calcScreen').innerText = calcExpression || "0";
+                } else if (key === 'Escape') {
+                    toggleMiniCalc();
+                } else if (key.toLowerCase() === 'c' || key === 'Delete') {
+                    clearCalc();
+                }
+            }
+        });
+
+        // NOTE SYSTEM
+        let notesList = [];
+        let currentNoteContext = 'global'; // 'global' or project ID
+
+        function getNoteStorageKey() {
+            if (currentNoteContext === 'global') return 'finmap_uz_notes_list_global';
+            return `finmap_uz_notes_list_project_${activeUser}_${currentNoteContext}`;
+        }
+
+        function loadNotes() {
+            // Migration check: if old list exists without suffix, move it to global
+            const oldList = localStorage.getItem('finmap_uz_notes_list');
+            if (oldList) {
+                localStorage.setItem('finmap_uz_notes_list_global', oldList);
+                localStorage.removeItem('finmap_uz_notes_list');
+            }
+
+            const stored = JSON.parse(localStorage.getItem(getNoteStorageKey()));
+            notesList = stored || [];
+        }
+
+        function saveNotesToStorage() {
+            localStorage.setItem(getNoteStorageKey(), JSON.stringify(notesList));
+        }
+
+        function openNoteModal(contextId) {
+            currentNoteContext = contextId || 'global';
+            
+            // Update Title
+            const titleEl = document.getElementById('noteModalTitle');
+            if (currentNoteContext === 'global') {
+                titleEl.innerText = 'Umumiy Zametkalar';
+            } else {
+                const fileObj = files.find(f => f.id === currentNoteContext);
+                titleEl.innerText = fileObj ? `Zametka: ${fileObj.name}` : 'Loyiha Zametkasi';
+            }
+
+            loadNotes();
+            renderNotes();
+            document.getElementById('noteModal').classList.add('active');
+        }
+
+        function closeNoteModal() {
+            document.getElementById('noteModal').classList.remove('active');
+        }
+
+        function addNewNote() {
+            const newNote = {
+                id: Date.now(),
+                text: '',
+                date: new Date().toISOString()
+            };
+            notesList.unshift(newNote); // Put new at the top
+            renderNotes();
+            
+            // Focus on the first entry's textarea automatically
+            setTimeout(() => {
+                const firstArea = document.querySelector('.note-textarea');
+                if(firstArea) {
+                    firstArea.focus();
+                }
+            }, 100);
+        }
+
+        async function deleteNote(id) {
+            const confirmed = await showCustomDialog({
+                type: 'confirm',
+                title: 'O\'chirish',
+                message: 'Ushbu zametkani o\'chirmoqchimisiz?',
+                danger: true,
+                confirmText: 'O\'chirish'
+            });
+
+            if (confirmed) {
+                notesList = notesList.filter(n => n.id !== id);
+                saveNotesToStorage();
+                renderNotes();
+            }
+        }
+
+        function updateNoteText(id, text) {
+            const note = notesList.find(n => n.id === id);
+            if(note) {
+                note.text = text;
+                saveNotesToStorage();
+            }
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesListContainer');
+            if (notesList.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+                        <i class="fa-solid fa-note-sticky" style="font-size: 40px; margin-bottom: 15px; opacity: 0.3;"></i>
+                        <p>Zametkalar topilmadi.<br>Foydali biror narsa yozib qo'ying!</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = notesList.map(note => `
+                <div class="note-item">
+                    <div class="note-header">
+                        <span class="note-date"><i class="fa-regular fa-clock"></i> ${formatNoteDate(note.date)}</span>
+                        <div class="note-actions">
+                            <button class="note-btn" onclick="deleteNote(${note.id})" title="O'chirish"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                    <textarea 
+                        class="note-textarea" 
+                        oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'; updateNoteText(${note.id}, this.value)"
+                        placeholder="Zametka matni..."
+                        style="height: ${calculateAreaHeight(note.text)}px;"
+                    >${note.text}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function formatNoteDate(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const isToday = date.toDateString() === now.toDateString();
+            
+            const timeStr = date.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' });
+            if (isToday) return `Bugun, ${timeStr}`;
+            
+            return date.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' }) + `, ${timeStr}`;
+        }
+
+        function calculateAreaHeight(text) {
+            if(!text) return 40;
+            const lines = text.split('\n').length;
+            return Math.max(40, lines * 24);
+        }
+
         // CUSTOM DIALOG SYSTEM
         let dialogResolve = null;
         let dialogType = null;
@@ -689,6 +1020,18 @@
         let activeUser = localStorage.getItem('finmap_uz_active_user');
         let usersDB = JSON.parse(localStorage.getItem('finmap_uz_usersDB')) || {};
         let authMode = 'login'; 
+
+        function toggleAuthPasswordVisibility() {
+            const pwdInput = document.getElementById('authPassword');
+            const icon = document.getElementById('authPasswordIcon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
 
         function toggleAuthMode() {
             authMode = authMode === 'login' ? 'register' : 'login';
